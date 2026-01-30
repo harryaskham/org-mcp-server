@@ -22,6 +22,8 @@
       systems = [
         "x86_64-linux"
         "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
       ];
 
       imports = [
@@ -36,22 +38,11 @@
         system,
         ...
       }: let
-        overlays = [(import rust-overlay)];
-        pkgsWithOverlay = import nixpkgs {
-          inherit system overlays;
-        };
-
-        rustToolchain = pkgsWithOverlay.rust-bin.nightly.latest.default.override {
-          extensions = [
-            "rust-src"
-            "rust-analyzer"
-            "llvm-tools-preview"
-          ];
-        };
+        rustToolchain = pkgs.rustc;
       in {
         packages = {
           default = self'.packages.org-mcp;
-          org-mcp = pkgsWithOverlay.rustPlatform.buildRustPackage rec {
+          org-mcp = pkgs.rustPlatform.buildRustPackage rec {
             pname = "org-mcp";
             version = let
               cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
@@ -118,28 +109,13 @@
         };
 
         devShells = {
-          default = pkgsWithOverlay.mkShell {
-            shellHook = ''
-              ${config.pre-commit.installationScript}
-            '';
-            inherit (self'.checks) pre-commit;
-            packages = with pkgsWithOverlay; [
-              cargo-bloat
-              cargo-edit
-              cargo-llvm-cov
-              cargo-nextest
-              cargo-outdated
-              cargo-semver-checks
-              cargo-udeps
-              cargo-watch
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              cargo
               curl
               git
               jq
               just
-              pkgs.alejandra
-              pkgs.deadnix
-              pkgs.statix
-              release-plz
               rustToolchain
             ];
 
