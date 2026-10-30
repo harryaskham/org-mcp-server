@@ -53,6 +53,8 @@
             cargoLock = {
               lockFile = ./Cargo.lock;
             };
+            # Installs never run the test suite (a loaded builder must not break a switch); checks.org-mcp does.
+            doCheck = false;
 
             nativeBuildInputs = [
               rustToolchain
@@ -66,6 +68,7 @@
             };
           };
         };
+        checks.org-mcp = self'.packages.org-mcp.overrideAttrs (_: {doCheck = true;});
         pre-commit = {
           check.enable = true;
           settings = {
